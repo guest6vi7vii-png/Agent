@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Agent — Voice AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04050a;--s1:#080c14;--s2:#0d1220;--s3:#131a2e;
+  --border:#ffffff08;--border2:#ffffff12;
+  --a1:#00d4ff;--a2:#0088ff;--a3:#6c47ff;
+  --green:#00ff9d;--red:#ff4d6d;
+  --text:#e8eef8;--sub:#7888a8;--muted:#3a4560;--r:16px;
+}
+body{
+  font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px 16px;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 20% 10%,rgba(0,212,255,.08) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 90%,rgba(108,71,255,.1) 0%,transparent 55%);
+}
+.app{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:24px}
+
+/* HEADER */
+.header{text-align:center}
+.logo{font-size:32px;font-weight:800;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--a1),var(--a2),var(--a3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+.tagline{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+
+/* API KEY SETUP */
+.setup-card{
+  width:100%;background:var(--s1);border:1px solid var(--border2);
+  border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;
+}
+.setup-title{font-size:13px;font-weight:700;color:var(--sub);letter-spacing:.5px}
+.input-wrap{position:relative;display:flex;align-items:center}
+.api-input{
+  width:100%;background:var(--s2);border:1px solid var(--border2);
+  border-radius:10px;padding:10px 44px 10px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--text);outline:none;transition:border-color .2s;letter-spacing:.5px;
+}
+.api-input:focus{border-color:rgba(0,212,255,.3)}
+.api-input::placeholder{color:var(--muted)}
+.eye-btn{
+  position:absolute;right:10px;background:none;border:none;
+  color:var(--muted);cursor:pointer;font-size:14px;padding:4px;
+  transition:color .2s;
+}
+.eye-btn:hover{color:var(--text)}
+.btn-save{
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  border:none;border-radius:10px;padding:10px 20px;
+  color:#000;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;
+  cursor:pointer;transition:all .2s;
+}
+.btn-save:hover{opacity:.85;transform:translateY(-1px)}
+.setup-hint{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.5px;text-align:center}
+.setup-hint a{color:rgba(0,212,255,.5);text-decoration:none}
+.saved-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.saved-badge{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--green);letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;
+}
+.dot-green{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.btn-change{
+  background:none;border:1px solid var(--border2);border-radius:8px;
+  padding:5px 10px;color:var(--muted);font-size:10px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;transition:all .2s;
+}
+.btn-change:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+
+/* ORB */
+.orb-wrap{
+  position:relative;width:200px;height:200px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.orb-ring{position:absolute;border-radius:50%;border:1px solid transparent;animation:ringrot 6s linear infinite}
+.orb-ring:nth-child(1){width:200px;height:200px;border-color:rgba(0,212,255,.15);animation-duration:8s}
+.orb-ring:nth-child(2){width:168px;height:168px;border-color:rgba(108,71,255,.2);animation-duration:5s;animation-direction:reverse}
+.orb-ring:nth-child(3){width:136px;height:136px;border-color:rgba(0,136,255,.15);animation-duration:10s}
+@keyframes ringrot{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.orb{
+  width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(ellipse at 35% 30%,rgba(0,212,255,.3),rgba(108,71,255,.2) 50%,rgba(0,0,0,.8));
+  border:1px solid rgba(0,212,255,.2);
+  box-shadow:0 0 40px rgba(0,212,255,.15),0 0 80px rgba(108,71,255,.1),inset 0 0 30px rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s ease;position:relative;overflow:hidden;
+}
+.orb::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.1) 0%,transparent 50%)}
+.orb-icon{font-size:36px;position:relative;z-index:1;transition:all .3s}
+.orb-wrap.listening .orb{box-shadow:0 0 60px rgba(0,255,157,.4),0 0 120px rgba(0,255,157,.15),inset 0 0 30px rgba(0,0,0,.5);border-color:rgba(0,255,157,.4);animation:orbpulse 1s ease-in-out infinite}
+.orb-wrap.listening .orb-ring:nth-child(1){border-color:rgba(0,255,157,.3);animation-duration:3s}
+.orb-wrap.listening .orb-ring:nth-child(2){border-color:rgba(0,255,157,.2);animation-duration:2s}
+.orb-wrap.listening .orb-ring:nth-child(3){border-color:rgba(0,255,157,.15);animation-duration:4s}
+.orb-wrap.speaking .orb{box-shadow:0 0 60px rgba(0,136,255,.5),0 0 120px rgba(0,212,255,.2),inset 0 0 30px rgba(0,0,0,.5);border-color:rgba(0,212,255,.5);animation:orbspeak .6s ease-in-out infinite alternate}
+.orb-wrap.thinking .orb{animation:orbthink 2s ease-in-out infinite}
+.orb-wrap.locked .orb{opacity:.4;cursor:not-allowed}
+@keyframes orbpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes orbspeak{from{transform:scale(1)}to{transform:scale(1.04)}}
+@keyframes orbthink{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* WAVES */
+.waves{position:absolute;display:flex;align-items:center;gap:3px;bottom:-28px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .3s}
+.orb-wrap.listening .waves,.orb-wrap.speaking .waves{opacity:1}
+.wave-bar{width:3px;background:var(--a1);border-radius:2px;height:3px;transition:background .3s}
+.orb-wrap.listening .wave-bar{background:var(--green);animation:wavedance .4s ease-in-out infinite alternate}
+.orb-wrap.speaking .wave-bar{animation:wavedance .3s ease-in-out infinite alternate}
+.wave-bar:nth-child(1){animation-delay:.00s;--wh:8px}.wave-bar:nth-child(2){animation-delay:.06s;--wh:16px}
+.wave-bar:nth-child(3){animation-delay:.12s;--wh:24px}.wave-bar:nth-child(4){animation-delay:.04s;--wh:20px}
+.wave-bar:nth-child(5){animation-delay:.10s;--wh:12px}.wave-bar:nth-child(6){animation-delay:.08s;--wh:18px}
+.wave-bar:nth-child(7){animation-delay:.14s;--wh:10px}
+@keyframes wavedance{from{height:3px}to{height:var(--wh)}}
+
+/* STATUS */
+.status-text{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);transition:color .3s;text-align:center;margin-top:16px}
+.status-text.active{color:var(--green)}.status-text.speaking{color:var(--a1)}.status-text.thinking{color:var(--a2)}
+
+/* CHAT */
+.chat-area{
+  width:100%;background:var(--s1);border:1px solid var(--border2);
+  border-radius:20px;padding:16px;max-height:260px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;
+}
+.chat-area::-webkit-scrollbar{width:3px}
+.chat-area::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+.msg{display:flex;flex-direction:column;gap:3px;animation:msgIn .25s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.msg.user .msg-label{color:rgba(0,255,157,.5);text-align:right}
+.msg.ai .msg-label{color:rgba(0,212,255,.5)}
+.msg-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;font-weight:500;max-width:85%}
+.msg.user{align-items:flex-end}
+.msg.user .msg-bubble{background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.15);color:var(--text)}
+.msg.ai .msg-bubble{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.12);color:var(--text)}
+.empty-chat{text-align:center;padding:24px 0;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;line-height:2}
+
+/* CONTROLS */
+.controls{width:100%;display:flex;align-items:center;justify-content:center;gap:12px}
+.btn-main{width:64px;height:64px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--a1),var(--a2));color:#000;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,212,255,.4);transition:all .2s ease}
+.btn-main:hover{transform:scale(1.08);box-shadow:0 6px 32px rgba(0,212,255,.6)}
+.btn-main:active{transform:scale(.95)}
+.btn-main.recording{background:linear-gradient(135deg,var(--green),#00cc7a);box-shadow:0 4px 24px rgba(0,255,157,.4);animation:btnpulse 1s ease-in-out infinite}
+.btn-main:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
+@keyframes btnpulse{0%,100%{box-shadow:0 4px 24px rgba(0,255,157,.4)}50%{box-shadow:0 4px 40px rgba(0,255,157,.7)}}
+.btn-side{width:44px;height:44px;border-radius:50%;border:1px solid var(--border2);background:var(--s2);color:var(--sub);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.btn-side:hover{background:var(--s3);color:var(--text)}
+
+.bottom-info{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-align:center;letter-spacing:.5px;line-height:1.8}
+.bottom-info span{color:rgba(0,212,255,.4)}
+
+/* hidden */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="logo">AGENT</div>
+    <div class="tagline">Voice AI Assistant</div>
+  </div>
+
+  <!-- API KEY SETUP -->
+  <div class="setup-card" id="setupCard">
+    <div class="setup-title">🔑 Groq API Key</div>
+    <div class="input-wrap">
+      <input class="api-input" id="apiInput" type="password" placeholder="gsk_..."/>
+      <button class="eye-btn" id="eyeBtn" onclick="toggleEye()">👁</button>
+    </div>
+    <button class="btn-save" onclick="saveKey()">Simpan & Mulai</button>
+    <div class="setup-hint">Dapatkan API key gratis di <a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
+  </div>
+
+  <!-- SAVED ROW -->
+  <div class="setup-card hidden" id="savedCard">
+    <div class="saved-row">
+      <div class="saved-badge">
+        <div class="dot-green"></div>
+        API Key tersimpan
+      </div>
+      <button class="btn-change" onclick="changeKey()">Ganti Key</button>
+    </div>
+  </div>
+
+  <!-- ORB -->
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center">
+    <div class="orb-wrap locked" id="orbWrap" onclick="toggleListen()">
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb" id="orb">
+        <span class="orb-icon" id="orbIcon">🔒</span>
+      </div>
+      <div class="waves">
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+    </div>
+    <div class="status-text" id="statusText">Masukkan API key dulu</div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area" id="chatArea">
+    <div class="empty-chat" id="emptyChat">Ketuk orb atau tombol mikrofon<br>lalu bicara ke Agent</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="btn-side" onclick="stopAll()" title="Stop">⏹</button>
+    <button class="btn-main" id="btnMic" onclick="toggleListen()" disabled>🎙️</button>
+    <button class="btn-side" onclick="clearChat()" title="Clear">🗑️</button>
+  </div>
+
+  <div class="bottom-info">
+    Model: <span>llama-3.3-70b-versatile</span> · STT: <span>whisper-large-v3</span><br>
+    TTS: <span>Web Speech API</span> · Groq API
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+let GROQ_API_KEY  = '';
+let mediaRecorder = null;
+let audioChunks   = [];
+let isRecording   = false;
+let isSpeaking    = false;
+let currentUtter  = null;
+let chatHistory   = [];
+let isReady       = false;
+
+const CHAT_MODEL = 'llama-3.3-70b-versatile';
+const STT_MODEL  = 'whisper-large-v3';
+const SYSTEM_PROMPT = `Kamu adalah Agent, asisten AI suara yang cerdas dan responsif.
+Kamu berbicara dalam Bahasa Indonesia secara natural dan ramah.
+Jawab dengan singkat dan jelas — maksimal 3-4 kalimat kecuali diminta detail.`;
+
+// ── DOM ──
+const orbWrap    = document.getElementById('orbWrap');
+const orbIcon    = document.getElementById('orbIcon');
+const statusText = document.getElementById('statusText');
+const btnMic     = document.getElementById('btnMic');
+const chatArea   = document.getElementById('chatArea');
+const setupCard  = document.getElementById('setupCard');
+const savedCard  = document.getElementById('savedCard');
+
+// ── LOAD SAVED KEY ──
+const saved = localStorage.getItem('groq_key');
+if (saved) { GROQ_API_KEY = saved; activateAgent(); }
+
+// ── SAVE KEY ──
+function saveKey() {
+  const val = document.getElementById('apiInput').value.trim();
+  if (!val.startsWith('gsk_') || val.length < 20) {
+    alert('API key tidak valid. Harus dimulai dengan gsk_'); return;
+  }
+  GROQ_API_KEY = val;
+  localStorage.setItem('groq_key', val);
+  activateAgent();
+}
+
+function activateAgent() {
+  isReady = true;
+  setupCard.classList.add('hidden');
+  savedCard.classList.remove('hidden');
+  orbWrap.classList.remove('locked');
+  btnMic.disabled = false;
+  setState('idle');
+}
+
+function changeKey() {
+  isReady = false;
+  GROQ_API_KEY = '';
+  localStorage.removeItem('groq_key');
+  savedCard.classList.add('hidden');
+  setupCard.classList.remove('hidden');
+  document.getElementById('apiInput').value = '';
+  orbWrap.classList.add('locked');
+  btnMic.disabled = true;
+  orbIcon.textContent = '🔒';
+  statusText.textContent = 'Masukkan API key dulu';
+  statusText.className = 'status-text';
+}
+
+function toggleEye() {
+  const inp = document.getElementById('apiInput');
+  const btn = document.getElementById('eyeBtn');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+// ── SET STATE ──
+function setState(state) {
+  orbWrap.className = 'orb-wrap';
+  statusText.className = 'status-text';
+  btnMic.className = 'btn-main';
+  if (state === 'idle') {
+    orbIcon.textContent = '🎙️';
+    statusText.textContent = 'Ketuk untuk bicara';
+    btnMic.textContent = '🎙️';
+  } else if (state === 'listening') {
+    orbWrap.classList.add('listening');
+    statusText.classList.add('active');
+    orbIcon.textContent = '👂';
+    statusText.textContent = 'Mendengarkan...';
+    btnMic.classList.add('recording');
+    btnMic.textContent = '⏸';
+  } else if (state === 'thinking') {
+    orbWrap.classList.add('thinking');
+    statusText.classList.add('thinking');
+    orbIcon.textContent = '🧠';
+    statusText.textContent = 'Memproses...';
+    btnMic.textContent = '🎙️';
+  } else if (state === 'speaking') {
+    orbWrap.classList.add('speaking');
+    statusText.classList.add('speaking');
+    orbIcon.textContent = '🔊';
+    statusText.textContent = 'Agent berbicara...';
+    btnMic.textContent = '🎙️';
+  }
+}
+
+// ── TOGGLE ──
+async function toggleListen() {
+  if (!isReady) return;
+  if (isSpeaking) { stopSpeaking(); return; }
+  if (isRecording) { stopRecording(); return; }
+  await startRecording();
+}
+
+// ── RECORD ──
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => { stream.getTracks().forEach(t => t.stop()); await processAudio(); };
+    mediaRecorder.start();
+    isRecording = true;
+    setState('listening');
+  } catch (err) { alert('Izin mikrofon diperlukan: ' + err.message); }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    isRecording = false;
+    mediaRecorder.stop();
+    setState('thinking');
+  }
+}
+
+// ── STT ──
+async function processAudio() {
+  if (!audioChunks.length) { setState('idle'); return; }
+  const blob = new Blob(audioChunks, { type: 'audio/webm' });
+  const formData = new FormData();
+  formData.append('file', blob, 'audio.webm');
+  formData.append('model', STT_MODEL);
+  formData.append('language', 'id');
+  formData.append('response_format', 'json');
+  setState('thinking');
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
+      body: formData
+    });
+    if (!res.ok) throw new Error(`STT ${res.status}`);
+    const data = await res.json();
+    const text = data.text?.trim();
+    if (!text) { setState('idle'); return; }
+    addMessage('user', text);
+    await askAgent(text);
+  } catch (err) {
+    console.error(err);
+    addMessage('ai', '⚠️ Gagal transkripsi. Coba lagi.');
+    setState('idle');
+  }
+}
+
+// ── CHAT ──
+async function askAgent(userText) {
+  chatHistory.push({ role: 'user', content: userText });
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: CHAT_MODEL,
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...chatHistory],
+        max_tokens: 512, temperature: 0.7
+      })
+    });
+    if (!res.ok) throw new Error(`Chat ${res.status}`);
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content?.trim();
+    if (!reply) throw new Error('Empty');
+    chatHistory.push({ role: 'assistant', content: reply });
+    addMessage('ai', reply);
+    speak(reply);
+  } catch (err) {
+    console.error(err);
+    addMessage('ai', '⚠️ Gagal respons. Coba lagi.');
+    setState('idle');
+  }
+}
+
+// ── TTS ──
+function speak(text) {
+  if (!('speechSynthesis' in window)) { setState('idle'); return; }
+  stopSpeaking();
+  currentUtter = new SpeechSynthesisUtterance(text);
+  currentUtter.lang = 'id-ID';
+  currentUtter.rate = 1.0;
+  currentUtter.pitch = 0.85;
+  currentUtter.volume = 1;
+  const voices = window.speechSynthesis.getVoices();
+  const maleVoice = voices.find(v =>
+    v.name.toLowerCase().includes('male') ||
+    v.name.toLowerCase().includes('david') ||
+    v.name.toLowerCase().includes('mark') ||
+    v.name.toLowerCase().includes('google uk english male')
+  ) || voices.find(v => v.lang.startsWith('id'))
+    || voices.find(v => v.lang.startsWith('en-US'));
+  if (maleVoice) currentUtter.voice = maleVoice;
+  currentUtter.onstart = () => { isSpeaking = true; setState('speaking'); };
+  currentUtter.onend   = () => { isSpeaking = false; setState('idle'); currentUtter = null; };
+  currentUtter.onerror = () => { isSpeaking = false; setState('idle'); currentUtter = null; };
+  window.speechSynthesis.speak(currentUtter);
+}
+
+function stopSpeaking() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  isSpeaking = false; currentUtter = null;
+}
+
+function stopAll() {
+  stopSpeaking();
+  if (isRecording) { isRecording = false; try { mediaRecorder?.stop(); } catch(e){} }
+  if (isReady) setState('idle');
+}
+
+// ── CHAT UI ──
+function addMessage(role, text) {
+  document.getElementById('emptyChat')?.remove();
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="msg-label">${role==='user'?'Kamu':'Agent'}</div><div class="msg-bubble">${escHtml(text)}</div>`;
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function clearChat() {
+  chatHistory = [];
+  chatArea.innerHTML = '<div class="empty-chat" id="emptyChat">Ketuk orb atau tombol mikrofon<br>lalu bicara ke Agent</div>';
+}
+
+function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── INIT ──
+setTimeout(() => window.speechSynthesis.getVoices(), 500);
+</script>
+</body>
+</html>
